@@ -1,0 +1,61 @@
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+}
+
+enum Category {
+  MUSIC
+  SPORT
+  THEATERS_AND_ART
+  OTHER
+}
+
+model Event {
+  id           String       @id @default(uuid())
+  name         String
+  description  String
+  startDate    DateTime
+  endDate      DateTime
+  thumbnailUrl String
+  location     Location?
+  organizerId  String
+  organizer    Organizer    @relation(fields: [organizerId], references: [id])
+  config       EventConfig?
+  updatedAt    DateTime     @updatedAt
+  locationId   String
+
+  @@map("events")
+}
+
+model EventConfig {
+  id                  String      @id @default(uuid())
+  startSellDate       DateTime
+  endSellDate         DateTime
+  isFree              Boolean
+  customerTicketLimit Int
+  isNewTrending       Boolean     @default(false)
+  status              EventStatus @default(DRAFT)
+  categories          Category[]
+  eventId             String      @unique
+  event               Event       @relation(fields: [eventId], references: [id])
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  @@map("event_configs")
+}
+
+model Location {
+  id        String   @id @default(uuid())
+  name      String
+  address   String
+  city      String
+  state     String
+  country   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  eventId   String   @unique
+  event     Event    @relation(fields: [eventId], references: [id])
+
+  @@map("locations")
+}
