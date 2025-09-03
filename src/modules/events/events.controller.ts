@@ -1,35 +1,54 @@
-import { Controller } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put, Query } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { EventsService } from './events.service';
-import { CreateEventDto } from './dto/create-event.dto';
-import { UpdateEventDto } from './dto/update-event.dto';
+import { CreateEventDto } from './dtos/create-event.dto';
+import { UpdateEventDto } from './dtos/update-event.dto';
+import { QueryEventDto } from './dtos/query-event.dto';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-@Controller()
+@Controller('events')
+@ApiTags('Events')
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
-  @MessagePattern('createEvent')
-  create(@Payload() createEventDto: CreateEventDto) {
-    return this.eventsService.create(createEventDto);
+  @ApiOperation({ summary: 'Create Event' })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Event Created.' })
+  @Post()
+  create(@Body() dto: CreateEventDto) {
+    return this.eventsService.create(dto);
   }
 
-  @MessagePattern('findAllEvents')
-  findAll() {
-    return this.eventsService.findAll();
+  @ApiOperation({ summary: 'Find Many Events' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Events Found.' })
+  @Get()
+  findMany(@Query() query: QueryEventDto) {
+    const page = query?.page ?? 1;
+    const limit = query?.limit ?? 15;
+    return this.eventsService.findMany({
+      filter: query.filters,
+      sort: query?.sort,
+      pagination: { page, limit },
+    });
   }
 
-  @MessagePattern('findOneEvent')
-  findOne(@Payload() id: number) {
+  @ApiOperation({ summary: 'Find Event By Id' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Event Found.' })
+  @Get(':id')
+  findById(@Param('id') id: string) {
     return this.eventsService.findOne(id);
   }
 
-  @MessagePattern('updateEvent')
-  update(@Payload() updateEventDto: UpdateEventDto) {
-    return this.eventsService.update(updateEventDto.id, updateEventDto);
+  @ApiOperation({ summary: 'Update Event' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Event Updated.' })
+  @Put(':id')
+  update(@Payload() dto: UpdateEventDto) {
+    return this.eventsService.update(dto.id, dto);
   }
 
-  @MessagePattern('removeEvent')
-  remove(@Payload() id: number) {
+  @ApiOperation({ summary: 'Delete Event' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Event Removed.' })
+  @Delete(':id')
+  Delete(@Param('id') id: number) {
     return this.eventsService.remove(id);
   }
 }
