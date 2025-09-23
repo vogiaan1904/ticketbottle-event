@@ -1,3 +1,4 @@
+import { LoggerService } from '@/shared/services/logger.service';
 import {
   Injectable,
   InternalServerErrorException,
@@ -5,7 +6,6 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
-import { LoggerService } from '../services/logger.service';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
@@ -22,7 +22,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     }
   }
 
-  async onModuleDestroy() { 
+  async onModuleDestroy() {
     await this.$disconnect();
   }
 }

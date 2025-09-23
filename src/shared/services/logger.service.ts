@@ -13,17 +13,18 @@ export class LoggerService extends ConsoleLogger {
       this.logger.debug('Logging initialized at debug level');
     }
   }
+
   error(message: string, trace?: string, context?: string): void {
     this.logger.error(message, { trace, context });
   }
   log(message: string, context?: string) {
-    this.logger.info(message,  context );
+    this.logger.info(message, context);
   }
   info(message: string, context?: string) {
-    this.logger.info(message,  context);
+    this.logger.info(message, context);
   }
   debug(message: string, context?: string) {
-    this.logger.debug(message, context );
+    this.logger.debug(message, context);
   }
   warn(message: string, context?: string) {
     this.logger.warn(message, context);

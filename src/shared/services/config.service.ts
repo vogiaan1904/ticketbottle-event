@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import * as winston from 'winston';
 import * as DailyRotateFile from 'winston-daily-rotate-file';
 import * as dotenv from 'dotenv';
-import { ISwaggerConfigInterface } from '@/shared/interfaces/swagger-config.interface';
+import { ISwaggerConfig } from '@/shared/interfaces/swagger-config.interface';
 
 @Injectable()
 export class AppConfigService {
@@ -29,7 +29,6 @@ export class AppConfigService {
     return this.get('NODE_ENV') || 'development';
   }
 
-  // Database configuration
   get databaseConfig() {
     return {
       url: this.get('DATABASE_URL'),
@@ -44,7 +43,6 @@ export class AppConfigService {
     };
   }
 
-  // Redis configuration
   get redisConfig() {
     return {
       url: this.get('REDIS_URL') || 'redis://localhost:6379',
@@ -57,20 +55,23 @@ export class AppConfigService {
     };
   }
 
-  // Microservices configuration
   get microservicesConfig() {
     return {
+      internalKey: this.get('MICROSERVICE_INTERNAL_KEY'),
       transport: {
         tcp: this.get('MICROSERVICES_TRANSPORT_TCP'),
         redis: this.get('MICROSERVICES_TRANSPORT_REDIS'),
         rabbitmq: this.get('MICROSERVICES_TRANSPORT_RABBITMQ'),
       },
+      auth: this.get('MICROSERVICES_AUTH'),
+      events: this.get('MICROSERVICES_EVENTS'),
+      users: this.get('MICROSERVICES_USERS'),
     };
   }
 
-  get swaggerConfig(): ISwaggerConfigInterface {
+  get swaggerConfig(): ISwaggerConfig {
     return {
-      path: this.get('SWAGGER_PATH') || '/api/docs',
+      path: this.get('SWAGGER_PATH') || 'docs',
       title: this.get('SWAGGER_TITLE') || 'TicketBottle Event API',
       description: this.get('SWAGGER_DESCRIPTION'),
       version: this.get('SWAGGER_VERSION') || '0.0.1',
@@ -120,7 +121,6 @@ export class AppConfigService {
     };
   }
 
-  // Application configuration
   get appConfig() {
     return {
       name: this.get('APP_NAME'),
@@ -130,6 +130,7 @@ export class AppConfigService {
       corsOrigins: this.get('APP_CORS_ORIGINS'),
       logLevel: this.get('APP_LOG_LEVEL'),
       initAdminPassword: this.get('APP_INIT_ADMIN_PASSWORD'),
+      encryptKey: this.get('ENCRYPT_KEY'),
     };
   }
 }

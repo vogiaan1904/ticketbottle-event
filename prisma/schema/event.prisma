@@ -12,31 +12,35 @@ enum Category {
 }
 
 model Event {
-  id           String       @id @default(uuid())
+  id           String         @id @default(uuid())
   name         String
   description  String
   startDate    DateTime
   endDate      DateTime
   thumbnailUrl String
-  location     Location?
-  organizerId  String
-  organizer    Organizer    @relation(fields: [organizerId], references: [id])
+  location     EventLocation?
   config       EventConfig?
-  updatedAt    DateTime     @updatedAt
+  organizer    Organizer?
+  roles        EventRole[]
+  categories   Category[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 
   @@map("events")
 }
 
 model EventConfig {
   id                  String      @id @default(uuid())
-  startSellDate       DateTime
-  endSellDate         DateTime
+  eventId             String      @unique
+  ticketSaleStartDate DateTime
+  ticketSaleEndDate   DateTime
   isFree              Boolean
-  customerTicketLimit Int
+  maxAttendees        Int
+  isPublic            Boolean     @default(true)
+  requiresApproval    Boolean     @default(false)
+  allowWaitRoom       Boolean     @default(true)
   isNewTrending       Boolean     @default(false)
   status              EventStatus @default(DRAFT)
-  categories          Category[]
-  eventId             String      @unique
   event               Event       @relation(fields: [eventId], references: [id])
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @updatedAt
@@ -44,21 +48,39 @@ model EventConfig {
   @@map("event_configs")
 }
 
-model Location {
-  id         String   @id @default(uuid())
-  name       String
-  street     String?
-  city       String?
-  postalCode String?
-  state      String?
-  province   String?
-  district   String?
-  ward       String?
-  country    String
-  eventId    String   @unique
-  event      Event    @relation(fields: [eventId], references: [id])
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+model EventLocation {
+  id        String   @id @default(uuid())
+  eventId   String   @unique
+  venue     String
+  street    String
+  city      String
+  district  String?
+  ward      String?
+  country   String
+  event     Event    @relation(fields: [eventId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@map("locations")
+  @@map("event_locations")
+}
+
+model EventRole {
+  id        String        @id @default(uuid())
+  userId    String
+  eventId   String
+  role      EventRoleType
+  event     Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@unique([userId, eventId])
+  @@map("event_roles")
+}
+
+enum EventRoleType {
+  ADMIN
+  EDITOR
+  VIEWER
+
+  @@map("event_role_types")
 }

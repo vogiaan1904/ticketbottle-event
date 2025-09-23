@@ -1,8 +1,8 @@
 import { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { SwaggerTheme, SwaggerThemeNameEnum } from 'swagger-themes';
-import { ISwaggerConfigInterface } from '@/shared/interfaces/swagger-config.interface';
-export function setupSwagger(app: INestApplication, config: ISwaggerConfigInterface) {
+import { ISwaggerConfig } from '@/shared/interfaces/swagger-config.interface';
+export function setupSwagger(app: INestApplication, config: ISwaggerConfig) {
   const options = new DocumentBuilder()
     .setTitle(config.title)
     .setDescription(config.description || '')
@@ -21,8 +21,10 @@ export function setupSwagger(app: INestApplication, config: ISwaggerConfigInterf
   const document = SwaggerModule.createDocument(app, options);
   const theme = new SwaggerTheme();
 
-  SwaggerModule.setup(config.path || 'docs', app, document, {
+  const mountPath = (config.path || 'docs').replace(/^\/+|\/+$|\s+/g, '');
+  SwaggerModule.setup(mountPath, app, document, {
     swaggerOptions: { persistAuthorization: true },
+    useGlobalPrefix: true,
     customCss: theme.getBuffer(SwaggerThemeNameEnum.ONE_DARK),
   });
 }

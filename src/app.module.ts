@@ -1,21 +1,34 @@
-import { MiddlewareConsumer, Module } from '@nestjs/common';
+import { RedisModule } from '@nestjs-modules/ioredis';
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { JwtModule } from '@nestjs/jwt';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { GlobalGrpcExceptionFilter } from './common/filters/global-grpc-exception.filter';
+import { InternalServiceJwtGuard } from './common/guards/internal-service-jwt.guard';
+import { InternalUserJwtGuard } from './common/guards/internal-user-jwt.guard';
+import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { TransformInterceptor } from './common/interceptors/transfrom.interceptor';
+import { LoggerMiddleware } from './common/middlewares/logging.middleware';
 import { EventsModule } from './modules/events/events.module';
 import { SharedModule } from './shared.module';
 import { PrismaModule } from './shared/prisma/prisma.module';
-import { RedisModule } from '@nestjs-modules/ioredis';
 import { AppConfigService } from './shared/services/config.service';
-import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
-import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
-import { ResponseInterceptor } from './common/interceptors/response.interceptor';
-import { LoggerMiddleware } from './common/middlewares/logging.middleware';
 
 @Module({
   imports: [
     SharedModule,
     EventsModule,
     PrismaModule,
+    JwtModule.registerAsync({
+      useFactory: async (configService: AppConfigService) => {
+        return {
+          secret: configService.microservicesConfig.internalKey,
+          signOptions: { expiresIn: '15m' },
+        };
+      },
+      inject: [AppConfigService],
+    }),
     RedisModule.forRootAsync({
       useFactory: async (configService: AppConfigService) => {
         return {
@@ -36,16 +49,22 @@ import { LoggerMiddleware } from './common/middlewares/logging.middleware';
     AppService,
     {
       provide: APP_FILTER,
-      useClass: GlobalExceptionFilter,
+      useClass: GlobalGrpcExceptionFilter,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TransformInterceptor,
     },
     {
       provide: APP_INTERCEPTOR,
       useClass: ResponseInterceptor,
     },
+    { provide: APP_GUARD, useClass: InternalUserJwtGuard },
+    InternalServiceJwtGuard,
   ],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware).forRoutes('*');
+    consumer.apply(LoggerMiddleware).forRoutes({ path: '*path', method: RequestMethod.ALL });
   }
 }

@@ -1,6 +1,6 @@
 'use strict';
 
-export interface ISwaggerConfigInterface {
+export interface ISwaggerConfig {
   title: string;
   path?: string;
   description?: string;

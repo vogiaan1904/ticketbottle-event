@@ -1,7 +1,3 @@
-/**
- * 对响应体进行转换结构
- * @author Innei
- */
 import { isArrayLike, omit } from 'lodash';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';

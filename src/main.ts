@@ -10,6 +10,7 @@ async function bootstrap() {
 
   const configService = app.get(AppConfigService);
   const logger = app.get(LoggerService);
+  const isDocsEnv = ['development', 'staging'].includes(configService.nodeEnv);
 
   app.useLogger(logger);
 
@@ -17,27 +18,31 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
   const corsOriginsRaw = configService.appConfig.corsOrigins;
-  const corsOrigins =
-    typeof corsOriginsRaw === 'string'
+  const corsOrigins = Array.isArray(corsOriginsRaw)
+    ? (corsOriginsRaw as unknown as string[])
+    : typeof corsOriginsRaw === 'string'
       ? corsOriginsRaw
           .split(',')
           .map((o) => o.trim())
           .filter(Boolean)
-      : ['http://localhost:3000'];
+      : [];
+  const effectiveCorsOrigins = corsOrigins.length > 0 ? corsOrigins : ['http://localhost:3000'];
+  app.enableCors({ origin: effectiveCorsOrigins, credentials: true });
 
-  app.enableCors({ origin: corsOrigins, credentials: true });
-
-  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
   const port = configService.appConfig.port || 3000;
+
+  if (isDocsEnv) {
+    setupSwagger(app, configService.swaggerConfig);
+  }
 
   await app.listen(port);
   logger.log(
     `Application is running on: http://localhost:${port}/${configService.appConfig.globalPrefix || 'api'}`,
   );
-  if (['development', 'staging'].includes(configService.nodeEnv)) {
-    setupSwagger(app, configService.swaggerConfig);
+
+  if (isDocsEnv) {
     logger.info(
-      `See the API docs on: http://localhost:${port}/${configService.appConfig.globalPrefix || 'api'}/docs`,
+      `See the API docs on: http://localhost:${port}/${configService.appConfig.globalPrefix || 'api'}/${configService.swaggerConfig.path || 'docs'}`,
     );
   }
 }
