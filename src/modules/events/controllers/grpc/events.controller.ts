@@ -1,55 +1,54 @@
-import { InternalServiceJwtGuard } from '@/common/guards/internal-service-jwt.guard';
-import { CreateEventResponse, EVENT_SERVICE_NAME } from '@/protogen/event.pb';
-import { Body, Delete, Get, HttpStatus, Param, Put, Query, UseGuards } from '@nestjs/common';
+import {
+  CreateEventResponse,
+  EVENT_SERVICE_NAME,
+  FindManyEventResponse,
+  FindOneEventResponse,
+} from '@/protogen/event.pb';
 import { GrpcMethod } from '@nestjs/microservices';
-import { ApiOkResponse, ApiResponse } from '@nestjs/swagger';
 import { EventsService } from '../../events.service';
-import { CreateEventDto } from '../../dtos/grpc/create-event.dto';
-import { EventResponseMapper } from '../../mappers/event.mapper';
-import { FindManyEventDto } from '../../dtos/grpc/find-many-events.dto';
+import { CreateEventDto, FindManyEventDto, FindOneEventDto } from './dtos';
+import { EventResponseMapper } from './mappers';
+import { LoggerService } from '@/shared/services/logger.service';
+import { Controller } from '@nestjs/common';
 
+@Controller()
 export class EventsController {
-  constructor(private readonly eventsService: EventsService) {}
+  constructor(
+    private readonly eventsService: EventsService,
+    private readonly logger: LoggerService,
+  ) {
+    logger.setContext(EventsController.name);
+  }
 
   @GrpcMethod(EVENT_SERVICE_NAME, 'create')
   async create(dto: CreateEventDto): Promise<CreateEventResponse> {
-    const event = await this.eventsService.create(dto);
+    this.logger.info(`EventsController.create called.`);
+    const event = await this.eventsService.create(dto.toServiceDto());
+    return { event: EventResponseMapper.toProtoEvent(event) };
+  }
+
+  @GrpcMethod(EVENT_SERVICE_NAME, 'findOne')
+  async findOne(dto: FindOneEventDto): Promise<FindOneEventResponse> {
+    const event = await this.eventsService.findById(dto.id);
     return { event: EventResponseMapper.toProtoEvent(event) };
   }
 
   @GrpcMethod(EVENT_SERVICE_NAME, 'findMany')
-  findMany(dto: FindManyEventDto) {
-    const page = query?.page ?? 1;
-    const limit = query?.limit ?? 15;
-
-    return this.eventsService.findMany({
-      filter: query.filters,
-      sort: query?.sort,
-      pagination: { page, limit },
+  async findMany(dto: FindManyEventDto): Promise<FindManyEventResponse> {
+    const out = await this.eventsService.findMany({
+      filter: dto.filter.toServiceDto(),
+      pagination: { page: dto.page, limit: dto.pageSize },
     });
-  }
-
-  @ApiOkResponse({ type: EventDto })
-  @Get(':id')
-  findById(@Param('id') id: string) {
-    return this.eventsService.findById(id);
-  }
-
-  @ApiOkResponse({ type: EventDto })
-  @Put(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateEventDto) {
-    return this.eventsService.update(id, dto);
-  }
-
-  @ApiResponse({ status: HttpStatus.OK, description: 'Event Removed.' })
-  @Delete(':id')
-  Delete(@Param('id') id: string) {
-    return this.eventsService.delete(id);
-  }
-
-  @UseGuards(InternalServiceJwtGuard)
-  @Get('internal')
-  findAll(@Query() filter: FilterEventDto) {
-    return this.eventsService.findAll(filter);
+    return {
+      events: out.data.map((item) => EventResponseMapper.toProtoEvent(item)),
+      pagination: {
+        page: out.meta.currentPage,
+        pageSize: out.meta.perPage,
+        count: out.meta.total,
+        lastPage: out.meta.lastPage,
+        hasNext: out.meta.next === 1,
+        hasPrevious: out.meta.prev === 1,
+      },
+    };
   }
 }

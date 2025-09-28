@@ -21,7 +21,7 @@
     "prisma-migrate:dev": "prisma migrate dev -n migrate",
     "proto:update": "bash scripts/update-protos.sh",
     "proto:all": "npm run proto:event",
-    "proto:event": "protoc --plugin=node_modules/.bin/protoc-gen-ts_proto -I=./protos --ts_proto_out=src/protogen/ protos/event.proto --ts_proto_opt=nestJs=true --ts_proto_opt=fileSuffix=.pb"
+    "proto:event": "protoc --plugin=node_modules/.bin/protoc-gen-ts_proto -I=./src/protos --ts_proto_out=src/protogen/ src/protos/event.proto --ts_proto_opt=nestJs=true --ts_proto_opt=fileSuffix=.pb"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.14.0",

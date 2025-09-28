@@ -1,9 +1,18 @@
+import {
+  Category,
+  Event,
+  EventConfig,
+  EventLocation,
+  EventOrganizer,
+  EventRole,
+  EventRoleType,
+  EventStatus,
+} from '@/protogen/event.pb';
 import { Timestamp } from '@/protogen/google/protobuf/timestamp.pb';
-import { Category, EventStatus } from '@prisma/client';
-import { Expose, Type } from 'class-transformer';
 
-@Expose()
-class LocationDto {
+import { Type } from 'class-transformer';
+
+class LocationDto implements EventLocation {
   id: string;
   venue: string;
   address: string;
@@ -12,8 +21,7 @@ class LocationDto {
   updatedAt: Timestamp;
 }
 
-@Expose()
-class ConfigDto {
+class ConfigDto implements EventConfig {
   id: string;
   ticketSaleStartDate: Timestamp;
   ticketSaleEndDate: Timestamp;
@@ -29,22 +37,45 @@ class ConfigDto {
   createdAt: Timestamp;
 }
 
-@Expose()
-export class EventDto {
+class OrganizerDto implements EventOrganizer {
+  id: string;
+  name: string;
+  description: string;
+  logoUrl: string;
+
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+class EventRoleDto implements EventRole {
+  id: string;
+  userId: string;
+  eventId: string;
+  role: EventRoleType;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export class EventDto implements Event {
   id: string;
   name: string;
   description: string;
   startDate: Timestamp;
   endDate: Timestamp;
   thumbnailUrl: string;
+  categories: Category[];
 
   @Type(() => LocationDto)
-  location?: LocationDto;
+  location: LocationDto;
 
   @Type(() => ConfigDto)
-  config?: ConfigDto;
+  config: ConfigDto;
 
-  categories: Category[];
+  @Type(() => OrganizerDto)
+  organizer: OrganizerDto;
+
+  @Type(() => EventRoleDto)
+  roles: EventRoleDto[];
 
   createdAt: Timestamp;
   updatedAt: Timestamp;

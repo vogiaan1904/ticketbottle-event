@@ -1,5 +1,6 @@
 import { Category, EventFilter, EventStatus, FindManyEventRequest } from '@/protogen/event.pb';
 import { Timestamp } from '@/protogen/google/protobuf/timestamp.pb';
+import { TimestampUtil } from '@/shared/utils/date.util';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import {
@@ -14,7 +15,9 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { TimestampDto } from './timestamp.dto';
+import { FilterEventDto as ServiceFilterEventDto } from '../../../dtos';
+import { CategoryMapper } from '../mappers/category.mapper';
+import { EventStatusMapper } from '../mappers/event-status.mapper';
 
 export enum EventSortField {
   NAME = 'name',
@@ -31,6 +34,22 @@ export enum EventSortField {
 }
 
 export class FilterEventDto implements EventFilter {
+  toServiceDto(): ServiceFilterEventDto {
+    return {
+      searchQuery: this.searchQuery,
+      categories: CategoryMapper.toPrismaArray(this.categories),
+      status: EventStatusMapper.toPrisma(this.status),
+      organizerId: this.organizerId,
+      userId: this.userId,
+      startDateFrom: TimestampUtil.toDate(this.startDateFrom),
+      startDateTo: TimestampUtil.toDate(this.startDateTo),
+      city: this.city,
+      country: this.country,
+      isPublic: this.isPublic,
+      isFree: this.isFree,
+    };
+  }
+
   @IsOptional()
   @IsString()
   searchQuery?: string;
@@ -53,13 +72,9 @@ export class FilterEventDto implements EventFilter {
   userId?: string;
 
   @IsOptional()
-  @ValidateNested()
-  @Type(() => TimestampDto)
   startDateFrom?: Timestamp;
 
   @IsOptional()
-  @ValidateNested()
-  @Type(() => TimestampDto)
   startDateTo?: Timestamp;
 
   @IsOptional()

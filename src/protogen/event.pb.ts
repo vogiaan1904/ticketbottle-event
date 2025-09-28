@@ -110,6 +110,7 @@ export interface CreateEventRequest {
   organizerName: string;
   organizerDescription: string;
   organizerLogoUrl: string;
+  creatorUserId: string;
 }
 
 export interface CreateEventResponse {
@@ -140,8 +141,7 @@ export interface UpdateEventResponse {
 }
 
 export interface FindOneEventRequest {
-  id?: string | undefined;
-  name?: string | undefined;
+  id: string;
 }
 
 export interface FindOneEventResponse {
@@ -177,7 +177,7 @@ export interface PaginationInfo {
   page: number;
   pageSize: number;
   count: number;
-  total: number;
+  lastPage: number;
   hasNext: boolean;
   hasPrevious: boolean;
 }

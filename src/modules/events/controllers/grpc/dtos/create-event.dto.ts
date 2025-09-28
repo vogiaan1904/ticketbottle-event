@@ -1,11 +1,35 @@
 import { Category, CreateEventRequest } from '@/protogen/event.pb';
 import { Timestamp } from '@/protogen/google/protobuf/timestamp.pb';
 import { IsArray, IsNotEmpty, IsOptional, IsString, IsUrl } from 'class-validator';
+import { CreateEventDto as ServiceCreateEventDto } from '../../../dtos';
+import { TimestampUtil } from '@/shared/utils/date.util';
+import { CategoryMapper } from '../mappers/category.mapper';
 
 export class CreateEventDto implements CreateEventRequest {
+  toServiceDto(): ServiceCreateEventDto {
+    return {
+      createdBy: this.creatorUserId,
+      name: this.name,
+      description: this.description,
+      startDate: TimestampUtil.toDate(this.startDate),
+      endDate: TimestampUtil.toDate(this.endDate),
+      thumbnailUrl: this.thumbnailUrl,
+      venue: this.venue,
+      street: this.street,
+      city: this.city,
+      country: this.country,
+      ward: this.ward,
+      district: this.district,
+      categories: CategoryMapper.toPrismaArray(this.categories),
+      organizerName: this.organizerName,
+      organizerDescription: this.organizerDescription,
+      organizerLogoUrl: this.organizerLogoUrl,
+    };
+  }
+
   @IsNotEmpty()
   @IsString()
-  userId: string;
+  creatorUserId: string;
 
   @IsNotEmpty()
   @IsString()
@@ -54,17 +78,18 @@ export class CreateEventDto implements CreateEventRequest {
   categories: Category[];
 
   @IsNotEmpty()
-  @IsArray()
+  @IsString()
   organizerName: string;
 
   @IsNotEmpty()
-  @IsArray()
+  @IsString()
   organizerDescription: string;
 
   @IsNotEmpty()
-  @IsArray()
+  @IsUrl()
   organizerLogoUrl: string;
 }
+
 export class CreateEventConfigDto {
   startSellDate: Date;
   endSellDate: Date;

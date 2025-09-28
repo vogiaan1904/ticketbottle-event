@@ -1,19 +1,15 @@
-import { ErrorCodeEnum } from '@/shared/constants/error-code.constant';
+import { PrismaService } from '@/infra/database/prisma/prisma.service';
 import { IPaginationOptions } from '@/shared/interfaces/pagination-input.interface';
 import { GetPaginationResponse } from '@/shared/interfaces/pagination-resp.interface';
-import { TimestampUtil } from '@/shared/utils/date.util';
 import { createPaginator } from '@/shared/utils/pagination.util';
-import { Injectable } from '@nestjs/common';
-import { EventRoleType } from '@prisma/client';
-import { CategoryMapper } from './mappers/category.mapper';
-import { CreateEventDto } from './dtos/grpc/create-event.dto';
-import { FilterEventDto } from './dtos/grpc/find-many-events.dto';
-import { UpdateEventDto } from './dtos/grpc/update-event.dto';
-import { PrismaService } from '@/infra/database/prisma/prisma.service';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { EventRoleType, Prisma } from '@prisma/client';
+import { CreateEventDto, FilterEventDto } from './dtos';
+import { EventEntity } from './entities';
 
 @Injectable()
 export class EventsService {
-  private readonly paginator = createPaginator();
+  private readonly paginator = createPaginator(1, 20);
   private readonly baseInclude = {
     organizer: true,
     location: true,
@@ -21,13 +17,119 @@ export class EventsService {
   };
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(dto: CreateEventDto) {
-    const prismaCategories = CategoryMapper.toPrismaArray(dto.categories);
+  private buildWhereFilter(dto: FilterEventDto): Prisma.EventWhereInput {
+    const where: Prisma.EventWhereInput = {};
+    const conditions: Prisma.EventWhereInput[] = [];
+    const configFilters: Prisma.EventConfigWhereInput = {
+      status: dto.status,
+      isPublic: dto.isPublic,
+      isFree: dto.isFree,
+    };
+
+    conditions.push({
+      config: configFilters,
+    });
+
+    if (dto.searchQuery?.trim()) {
+      conditions.push({
+        OR: [
+          {
+            name: {
+              contains: dto.searchQuery.trim(),
+              mode: 'insensitive',
+            },
+          },
+          {
+            description: {
+              contains: dto.searchQuery.trim(),
+              mode: 'insensitive',
+            },
+          },
+          {
+            organizer: {
+              name: {
+                contains: dto.searchQuery.trim(),
+                mode: 'insensitive',
+              },
+            },
+          },
+        ],
+      });
+    }
+
+    if (dto.startDateFrom || dto.startDateTo) {
+      const dateFilter: Prisma.DateTimeFilter = {};
+
+      if (dto.startDateFrom) {
+        dateFilter.gte = dto.startDateFrom;
+      }
+
+      if (dto.startDateTo) {
+        const endOfDay = new Date(dto.startDateTo);
+        endOfDay.setHours(23, 59, 59, 999);
+        dateFilter.lte = endOfDay;
+      }
+
+      conditions.push({
+        startDate: dateFilter,
+      });
+    }
+
+    if (dto.city?.trim() || dto.country?.trim()) {
+      const locationFilter: Prisma.EventLocationWhereInput = {};
+
+      if (dto.city?.trim()) {
+        locationFilter.city = {
+          contains: dto.city.trim(),
+          mode: 'insensitive',
+        };
+      }
+
+      if (dto.country?.trim()) {
+        locationFilter.country = {
+          contains: dto.country.trim(),
+          mode: 'insensitive',
+        };
+      }
+
+      conditions.push({
+        location: locationFilter,
+      });
+    }
+
+    if (dto.organizerId?.trim()) {
+      conditions.push({
+        organizer: {
+          id: dto.organizerId.trim(),
+        },
+      });
+    }
+
+    if (dto.userId?.trim()) {
+      conditions.push({
+        roles: {
+          some: {
+            userId: dto.userId.trim(),
+            // Optionally filter by specific role types
+            // role: EventRoleType.ADMIN,
+          },
+        },
+      });
+    }
+
+    where.AND = conditions;
+
+    return where;
+  }
+
+  async create(dto: CreateEventDto): Promise<EventEntity> {
     const event = await this.prisma.event.create({
       data: {
-        ...dto,
-        startDate: TimestampUtil.toDate(dto.startDate),
-        endDate: TimestampUtil.toDate(dto.endDate),
+        name: dto.name,
+        description: dto.description,
+        startDate: dto.startDate,
+        endDate: dto.endDate,
+        thumbnailUrl: dto.thumbnailUrl,
         location: {
           create: {
             venue: dto.venue,
@@ -38,8 +140,15 @@ export class EventsService {
             district: dto.district,
           },
         },
+        organizer: {
+          create: {
+            name: dto.organizerName,
+            description: dto.organizerDescription,
+            logoUrl: dto.organizerLogoUrl,
+          },
+        },
         categories: {
-          set: prismaCategories,
+          set: dto.categories,
         },
       },
       include: this.baseInclude,
@@ -47,7 +156,7 @@ export class EventsService {
 
     await this.prisma.eventRole.create({
       data: {
-        userId: dto.userId,
+        userId: dto.createdBy,
         eventId: event.id,
         role: EventRoleType.ADMIN,
       },
@@ -56,43 +165,14 @@ export class EventsService {
     return event;
   }
 
-  async update(userId: string, id: string, dto: UpdateEventDto) {
-    const oldEvent = await this.prisma.event.findUnique({
-      where: {
-        id: id,
-      },
-      include: {
-        roles: true,
-      },
-    });
-
-    if (!oldEvent) {
-      throw new BusinessException(ErrorCodeEnum.EventNotFound);
-    }
-
-    if (!oldEvent.roles.some((role) => role.userId === userId)) {
-      throw new BusinessException(ErrorCodeEnum.PermissionDenied);
-    }
-
-    return this.prisma.event.update({
-      where: { id },
-      data: {
-        ...dto,
-        startDate: parseDdMmYyyyToDate(dto.startDate),
-        endDate: parseDdMmYyyyToDate(dto.endDate),
-        location: {
-          update: dto.location,
-        },
-      },
-      include: this.baseInclude,
-    });
+  findById(id: string): Promise<EventEntity> {
+    return this.prisma.event.findUnique({ where: { id }, include: this.baseInclude });
   }
 
-  async list(filter: FilterEventDto) {
+  list(dto: FilterEventDto): Promise<EventEntity[]> {
     return this.prisma.event.findMany({
-      where: {
-        ...filter,
-      },
+      where: this.buildWhereFilter(dto),
+      include: this.baseInclude,
     });
   }
 
@@ -102,23 +182,18 @@ export class EventsService {
   }: {
     filter?: FilterEventDto;
     pagination: IPaginationOptions;
-  }): Promise<GetPaginationResponse<Event>> {
+  }): Promise<GetPaginationResponse<EventEntity>> {
     return this.paginator(
       this.prisma.event,
       {
-        where: {
-          ...filter,
-        },
+        where: this.buildWhereFilter(filter),
+        include: this.baseInclude,
       },
       {
         page: pagination.page,
         perPage: pagination.limit,
       },
     );
-  }
-
-  findById(id: string) {
-    return this.prisma.event.findUnique({ where: { id }, include: this.baseInclude });
   }
 
   delete(id: string) {

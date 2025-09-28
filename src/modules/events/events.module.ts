@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { EventsService } from './events.service';
-import { EventsController } from './controllers/grpc/events.controller';
-import { PrismaModule } from '@/shared/prisma/prisma.module';
+import { EventsController as GrpcEventsController } from './controllers/grpc/events.controller';
+import { PrismaModule } from '@/infra/database/prisma/prisma.module';
 
 @Module({
   imports: [PrismaModule],
-  controllers: [EventsController],
+  controllers: [GrpcEventsController],
   providers: [EventsService],
 })
 export class EventsModule {}
