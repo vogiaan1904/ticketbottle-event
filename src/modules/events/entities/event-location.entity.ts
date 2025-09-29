@@ -1,6 +1,4 @@
-import { EventLocation } from '@prisma/client';
-
-export class EventLocationEntity implements EventLocation {
+export class EventLocationEntity {
   id: string;
   eventId: string;
   venue: string;
@@ -9,7 +7,4 @@ export class EventLocationEntity implements EventLocation {
   district: string | null;
   ward: string | null;
   country: string;
-
-  createdAt: Date;
-  updatedAt: Date;
 }

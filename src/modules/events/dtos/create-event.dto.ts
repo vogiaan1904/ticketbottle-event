@@ -1,5 +1,3 @@
-import { Category } from '@prisma/client';
-
 export class CreateEventDto {
   createdBy: string;
   name: string;
@@ -13,7 +11,7 @@ export class CreateEventDto {
   country: string;
   ward?: string;
   district?: string;
-  categories: Category[];
+  categoryIds: string[];
   organizerName: string;
   organizerDescription: string;
   organizerLogoUrl: string;

@@ -8,7 +8,6 @@
 import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
 import { Observable } from "rxjs";
 import { Empty } from "./google/protobuf/empty.pb";
-import { Timestamp } from "./google/protobuf/timestamp.pb";
 
 export const protobufPackage = "event";
 
@@ -17,15 +16,6 @@ export enum EventStatus {
   EVENT_STATUS_DRAFT = 1,
   EVENT_STATUS_PUBLISHED = 2,
   EVENT_STATUS_CANCELLED = 3,
-  UNRECOGNIZED = -1,
-}
-
-export enum Category {
-  CATEGORY_UNSPECIFIED = 0,
-  CATEGORY_MUSIC = 1,
-  CATEGORY_SPORT = 2,
-  CATEGORY_THEATERS_AND_ART = 3,
-  CATEGORY_OTHER = 4,
   UNRECOGNIZED = -1,
 }
 
@@ -41,22 +31,27 @@ export interface Event {
   id: string;
   name: string;
   description: string;
-  startDate: Timestamp | undefined;
-  endDate: Timestamp | undefined;
+  startDate: string;
+  endDate: string;
   thumbnailUrl: string;
   location: EventLocation | undefined;
   config: EventConfig | undefined;
   organizer: EventOrganizer | undefined;
   roles: EventRole[];
-  categories: Category[];
-  createdAt: Timestamp | undefined;
-  updatedAt: Timestamp | undefined;
+  categories: EventCategory[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EventCategory {
+  id: string;
+  name: string;
 }
 
 export interface EventConfig {
   id: string;
-  ticketSaleStartDate: Timestamp | undefined;
-  ticketSaleEndDate: Timestamp | undefined;
+  ticketSaleStartDate: string;
+  ticketSaleEndDate: string;
   isFree: boolean;
   maxAttendees: number;
   isPublic: boolean;
@@ -64,16 +59,12 @@ export interface EventConfig {
   allowWaitRoom: boolean;
   isNewTrending: boolean;
   status: EventStatus;
-  createdAt: Timestamp | undefined;
-  updatedAt: Timestamp | undefined;
 }
 
 export interface EventLocation {
   id: string;
   venue: string;
   address: string;
-  createdAt: Timestamp | undefined;
-  updatedAt: Timestamp | undefined;
 }
 
 export interface EventOrganizer {
@@ -81,8 +72,6 @@ export interface EventOrganizer {
   name: string;
   description: string;
   logoUrl: string;
-  createdAt: Timestamp | undefined;
-  updatedAt: Timestamp | undefined;
 }
 
 export interface EventRole {
@@ -90,15 +79,13 @@ export interface EventRole {
   userId: string;
   eventId: string;
   role: EventRoleType;
-  createdAt: Timestamp | undefined;
-  updatedAt: Timestamp | undefined;
 }
 
 export interface CreateEventRequest {
   name: string;
   description: string;
-  startDate: Timestamp | undefined;
-  endDate: Timestamp | undefined;
+  startDate: string;
+  endDate: string;
   thumbnailUrl: string;
   venue: string;
   street: string;
@@ -106,7 +93,7 @@ export interface CreateEventRequest {
   country: string;
   ward?: string | undefined;
   district?: string | undefined;
-  categories: Category[];
+  categoryIds: string[];
   organizerName: string;
   organizerDescription: string;
   organizerLogoUrl: string;
@@ -121,8 +108,8 @@ export interface UpdateEventRequest {
   id: string;
   name?: string | undefined;
   description?: string | undefined;
-  startDate?: Timestamp | undefined;
-  endDate?: Timestamp | undefined;
+  startDate?: string | undefined;
+  endDate?: string | undefined;
   thumbnailUrl?: string | undefined;
   venueName?: string | undefined;
   street?: string | undefined;
@@ -130,10 +117,11 @@ export interface UpdateEventRequest {
   country?: string | undefined;
   ward?: string | undefined;
   district?: string | undefined;
-  categories: Category[];
+  categoryIds: string[];
   organizerName?: string | undefined;
   organizerDescription?: string | undefined;
   organizerLogoUrl?: string | undefined;
+  userId: string;
 }
 
 export interface UpdateEventResponse {
@@ -150,12 +138,12 @@ export interface FindOneEventResponse {
 
 export interface EventFilter {
   searchQuery?: string | undefined;
-  categories: Category[];
+  categoryIds: string[];
   status?: EventStatus | undefined;
   organizerId?: string | undefined;
   userId?: string | undefined;
-  startDateFrom?: Timestamp | undefined;
-  startDateTo?: Timestamp | undefined;
+  startDateFrom?: string | undefined;
+  startDateTo?: string | undefined;
   city?: string | undefined;
   country?: string | undefined;
   isPublic?: boolean | undefined;
@@ -192,6 +180,24 @@ export interface ListEventResponse {
 
 export interface DeleteEventRequest {
   id: string;
+}
+
+/** Event Config messages */
+export interface CreateEventConfigRequest {
+  userId: string;
+  eventId: string;
+  ticketSaleStartDate: string;
+  ticketSaleEndDate: string;
+  isFree: boolean;
+  maxAttendees: number;
+  isPublic: boolean;
+  requiresApproval: boolean;
+  allowWaitRoom: boolean;
+  isNewTrending: boolean;
+}
+
+export interface CreateEventConfigResponse {
+  eventConfig: EventConfig | undefined;
 }
 
 /** Event-specific operation messages */
@@ -249,6 +255,10 @@ export interface EventServiceClient {
 
   delete(request: DeleteEventRequest): Observable<Empty>;
 
+  /** Event config */
+
+  createConfig(request: CreateEventConfigRequest): Observable<CreateEventConfigResponse>;
+
   /** Additional event-specific operations */
 
   publishEvent(request: PublishEventRequest): Observable<PublishEventResponse>;
@@ -283,6 +293,12 @@ export interface EventServiceController {
 
   delete(request: DeleteEventRequest): void;
 
+  /** Event config */
+
+  createConfig(
+    request: CreateEventConfigRequest,
+  ): Promise<CreateEventConfigResponse> | Observable<CreateEventConfigResponse> | CreateEventConfigResponse;
+
   /** Additional event-specific operations */
 
   publishEvent(
@@ -313,6 +329,7 @@ export function EventServiceControllerMethods() {
       "findMany",
       "list",
       "delete",
+      "createConfig",
       "publishEvent",
       "cancelEvent",
       "getEventRoles",

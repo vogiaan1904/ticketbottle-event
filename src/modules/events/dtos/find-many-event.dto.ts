@@ -2,7 +2,7 @@ import { Category, EventStatus } from '@prisma/client';
 
 export class FilterEventDto {
   searchQuery?: string;
-  categories: Category[] = [];
+  categoryIds: string[] = [];
   status?: EventStatus;
   organizerId?: string;
   userId?: string;

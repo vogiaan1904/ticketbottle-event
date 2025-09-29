@@ -1,9 +1,7 @@
-import { Category, CreateEventRequest } from '@/protogen/event.pb';
-import { Timestamp } from '@/protogen/google/protobuf/timestamp.pb';
+import { IsISODateString } from '@/common/decorators/is-date-string.decorator';
+import { CreateEventRequest } from '@/protogen/event.pb';
 import { IsArray, IsNotEmpty, IsOptional, IsString, IsUrl } from 'class-validator';
 import { CreateEventDto as ServiceCreateEventDto } from '../../../dtos';
-import { TimestampUtil } from '@/shared/utils/date.util';
-import { CategoryMapper } from '../mappers/category.mapper';
 
 export class CreateEventDto implements CreateEventRequest {
   toServiceDto(): ServiceCreateEventDto {
@@ -11,8 +9,8 @@ export class CreateEventDto implements CreateEventRequest {
       createdBy: this.creatorUserId,
       name: this.name,
       description: this.description,
-      startDate: TimestampUtil.toDate(this.startDate),
-      endDate: TimestampUtil.toDate(this.endDate),
+      startDate: new Date(this.startDate),
+      endDate: new Date(this.endDate),
       thumbnailUrl: this.thumbnailUrl,
       venue: this.venue,
       street: this.street,
@@ -20,7 +18,7 @@ export class CreateEventDto implements CreateEventRequest {
       country: this.country,
       ward: this.ward,
       district: this.district,
-      categories: CategoryMapper.toPrismaArray(this.categories),
+      categoryIds: this.categoryIds,
       organizerName: this.organizerName,
       organizerDescription: this.organizerDescription,
       organizerLogoUrl: this.organizerLogoUrl,
@@ -40,10 +38,12 @@ export class CreateEventDto implements CreateEventRequest {
   description: string;
 
   @IsNotEmpty()
-  startDate: Timestamp;
+  @IsISODateString()
+  startDate: string;
 
   @IsNotEmpty()
-  endDate: Timestamp;
+  @IsISODateString()
+  endDate: string;
 
   @IsNotEmpty()
   @IsUrl()
@@ -73,9 +73,10 @@ export class CreateEventDto implements CreateEventRequest {
   @IsString()
   district?: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsArray()
-  categories: Category[];
+  @IsString({ each: true })
+  categoryIds: string[];
 
   @IsNotEmpty()
   @IsString()

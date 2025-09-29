@@ -1,7 +1,9 @@
-import { Category, Event } from '@prisma/client';
+import { Event } from '@prisma/client';
+import { EventCategoryEntity } from './event-category.entity';
 import { EventConfigEntity } from './event-config.entity';
-import { EventOrganizerEntity } from './event-org.entity';
 import { EventLocationEntity } from './event-location.entity';
+import { EventOrganizerEntity } from './event-org.entity';
+import { EventRoleEntity } from './event-role.entity';
 
 export class EventEntity implements Event {
   id: string;
@@ -10,11 +12,12 @@ export class EventEntity implements Event {
   startDate: Date;
   endDate: Date;
   thumbnailUrl: string;
-  categories: Category[];
+  categories: EventCategoryEntity[];
 
   location?: EventLocationEntity;
   config?: EventConfigEntity;
   organizer?: EventOrganizerEntity;
+  roles?: EventRoleEntity[];
 
   createdAt: Date;
   updatedAt: Date;

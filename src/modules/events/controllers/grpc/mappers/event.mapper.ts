@@ -1,107 +1,85 @@
 // event-response.mapper.ts
 import {
+  EventConfigEntity,
+  EventEntity,
+  EventLocationEntity,
+  EventOrganizerEntity,
+  EventRoleEntity,
+} from '@/modules/events/entities';
+import {
   Event as ProtoEvent,
   EventConfig as ProtoEventConfig,
   EventLocation as ProtoEventLocation,
   EventOrganizer as ProtoEventOrganizer,
   EventRole as ProtoEventRole,
 } from '@/protogen/event.pb';
-import {
-  Event as PrismaEvent,
-  EventConfig as PrismaEventConfig,
-  EventLocation as PrismaEventLocation,
-  Organizer as PrismaOrganizer,
-  EventRole as PrismaEventRole,
-} from '@prisma/client';
-import { CategoryMapper } from './category.mapper';
-import { TimestampUtil } from '@/shared/utils/date.util';
 import { EventRoleTypeMapper } from './event-role.mapper';
 import { EventStatusMapper } from './event-status.mapper';
 
-type PrismaEventWithRelations = PrismaEvent & {
-  location?: PrismaEventLocation | null;
-  config?: PrismaEventConfig | null;
-  organizer?: PrismaOrganizer | null;
-  roles?: PrismaEventRole[];
-};
-
 export class EventResponseMapper {
-  static toProtoEvent(prismaEvent: PrismaEventWithRelations): ProtoEvent {
+  static toProtoEvent(entity: EventEntity): ProtoEvent {
     return {
-      id: prismaEvent.id,
-      name: prismaEvent.name,
-      description: prismaEvent.description,
-      startDate: TimestampUtil.fromDate(prismaEvent.startDate),
-      endDate: TimestampUtil.fromDate(prismaEvent.endDate),
-      thumbnailUrl: prismaEvent.thumbnailUrl,
-      location: prismaEvent.location ? this.toProtoEventLocation(prismaEvent.location) : undefined,
-      config: prismaEvent.config ? this.toProtoEventConfig(prismaEvent.config) : undefined,
-      organizer: prismaEvent.organizer
-        ? this.toProtoEventOrganizer(prismaEvent.organizer)
-        : undefined,
-      roles: prismaEvent.roles ? prismaEvent.roles.map((role) => this.toProtoEventRole(role)) : [],
-      categories: CategoryMapper.toProtoArray(prismaEvent.categories),
-      createdAt: TimestampUtil.fromDate(prismaEvent.createdAt),
-      updatedAt: TimestampUtil.fromDate(prismaEvent.updatedAt),
+      id: entity.id,
+      name: entity.name,
+      description: entity.description,
+      startDate: entity.startDate.toISOString(),
+      endDate: entity.endDate.toISOString(),
+      thumbnailUrl: entity.thumbnailUrl,
+      location: entity.location ? this.toProtoEventLocation(entity.location) : undefined,
+      config: entity.config ? this.toProtoEventConfig(entity.config) : undefined,
+      organizer: entity.organizer ? this.toProtoEventOrganizer(entity.organizer) : undefined,
+      categories: entity.categories.map((category) => ({
+        id: category.id,
+        name: category.name,
+      })),
+      roles: entity.roles ? entity.roles.map((role) => this.toProtoEventRole(role)) : [],
+      createdAt: entity.createdAt.toISOString(),
+      updatedAt: entity.updatedAt.toISOString(),
     };
   }
 
-  static toProtoEventLocation(prismaLocation: PrismaEventLocation): ProtoEventLocation {
-    const address = [
-      prismaLocation.street,
-      prismaLocation.ward,
-      prismaLocation.district,
-      prismaLocation.city,
-      prismaLocation.country,
-    ]
+  static toProtoEventLocation(entity: EventLocationEntity): ProtoEventLocation {
+    const address = [entity.street, entity.ward, entity.district, entity.city, entity.country]
       .filter(Boolean)
       .join(', ');
 
     return {
-      id: prismaLocation.id,
-      venue: prismaLocation.venue,
+      id: entity.id,
+      venue: entity.venue,
       address: address,
-      createdAt: TimestampUtil.fromDate(prismaLocation.createdAt),
-      updatedAt: TimestampUtil.fromDate(prismaLocation.updatedAt),
     };
   }
 
-  static toProtoEventConfig(prismaConfig: PrismaEventConfig): ProtoEventConfig {
+  static toProtoEventConfig(entity: EventConfigEntity): ProtoEventConfig {
     return {
-      id: prismaConfig.id,
-      ticketSaleStartDate: TimestampUtil.fromDate(prismaConfig.ticketSaleStartDate),
-      ticketSaleEndDate: TimestampUtil.fromDate(prismaConfig.ticketSaleEndDate),
-      isFree: prismaConfig.isFree,
-      maxAttendees: prismaConfig.maxAttendees,
-      isPublic: prismaConfig.isPublic,
-      requiresApproval: prismaConfig.requiresApproval,
-      allowWaitRoom: prismaConfig.allowWaitRoom,
-      isNewTrending: prismaConfig.isNewTrending,
-      status: EventStatusMapper.toProto(prismaConfig.status),
-      createdAt: TimestampUtil.fromDate(prismaConfig.createdAt),
-      updatedAt: TimestampUtil.fromDate(prismaConfig.updatedAt),
+      id: entity.id,
+      ticketSaleStartDate: entity.ticketSaleStartDate.toISOString(),
+      ticketSaleEndDate: entity.ticketSaleEndDate.toISOString(),
+      isFree: entity.isFree,
+      maxAttendees: entity.maxAttendees,
+      isPublic: entity.isPublic,
+      requiresApproval: entity.requiresApproval,
+      allowWaitRoom: entity.allowWaitRoom,
+      isNewTrending: entity.isNewTrending,
+      status: EventStatusMapper.toProto(entity.status),
     };
   }
 
-  static toProtoEventOrganizer(prismaOrganizer: PrismaOrganizer): ProtoEventOrganizer {
+  static toProtoEventOrganizer(entity: EventOrganizerEntity): ProtoEventOrganizer {
     return {
-      id: prismaOrganizer.id,
-      name: prismaOrganizer.name,
-      description: prismaOrganizer.description,
-      logoUrl: prismaOrganizer.logoUrl || '',
-      createdAt: TimestampUtil.fromDate(prismaOrganizer.createdAt),
-      updatedAt: TimestampUtil.fromDate(prismaOrganizer.updatedAt),
+      id: entity.id,
+      name: entity.name,
+      description: entity.description,
+      logoUrl: entity.logoUrl || '',
     };
   }
 
-  static toProtoEventRole(prismaRole: PrismaEventRole): ProtoEventRole {
+  static toProtoEventRole(entity: EventRoleEntity): ProtoEventRole {
     return {
-      id: prismaRole.id,
-      userId: prismaRole.userId,
-      eventId: prismaRole.eventId,
-      role: EventRoleTypeMapper.toProto(prismaRole.role),
-      createdAt: TimestampUtil.fromDate(prismaRole.createdAt),
-      updatedAt: TimestampUtil.fromDate(prismaRole.updatedAt),
+      id: entity.id,
+      userId: entity.userId,
+      eventId: entity.eventId,
+      role: EventRoleTypeMapper.toProto(entity.role),
     };
   }
 }

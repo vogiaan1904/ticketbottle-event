@@ -4,11 +4,12 @@ enum EventStatus {
   CANCELLED
 }
 
-enum Category {
-  MUSIC
-  SPORT
-  THEATERS_AND_ART
-  OTHER
+enum EventRoleType {
+  ADMIN
+  EDITOR
+  VIEWER
+
+  @@map("event_role_types")
 }
 
 model Event {
@@ -22,7 +23,7 @@ model Event {
   config       EventConfig?
   organizer    Organizer?
   roles        EventRole[]
-  categories   Category[]
+  categories   EventCategory[]
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 
@@ -58,8 +59,6 @@ model EventLocation {
   ward      String?
   country   String
   event     Event    @relation(fields: [eventId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
   @@map("event_locations")
 }
@@ -77,10 +76,25 @@ model EventRole {
   @@map("event_roles")
 }
 
-enum EventRoleType {
-  ADMIN
-  EDITOR
-  VIEWER
+model Category {
+  id        String   @id @default(uuid())
+  name      String
+  events    EventCategory[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@map("event_role_types")
+  @@map("categories")
+}
+
+model EventCategory {
+  id        String   @id @default(uuid())
+  eventId   String
+  categoryId String
+  event     Event    @relation(fields: [eventId], references: [id])
+  category  Category @relation(fields: [categoryId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([eventId, categoryId])
+  @@map("event_categories")
 }

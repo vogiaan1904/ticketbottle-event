@@ -1,5 +1,4 @@
 import {
-  Category,
   Event,
   EventConfig,
   EventLocation,
@@ -8,7 +7,6 @@ import {
   EventRoleType,
   EventStatus,
 } from '@/protogen/event.pb';
-import { Timestamp } from '@/protogen/google/protobuf/timestamp.pb';
 
 import { Type } from 'class-transformer';
 
@@ -17,14 +15,14 @@ class LocationDto implements EventLocation {
   venue: string;
   address: string;
 
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: string;
+  updatedAt: string;
 }
 
 class ConfigDto implements EventConfig {
   id: string;
-  ticketSaleStartDate: Timestamp;
-  ticketSaleEndDate: Timestamp;
+  ticketSaleStartDate: string;
+  ticketSaleEndDate: string;
   isFree: boolean;
   maxAttendees: number;
   isPublic: boolean;
@@ -33,8 +31,8 @@ class ConfigDto implements EventConfig {
   isNewTrending: boolean;
   status: EventStatus;
 
-  updatedAt: Timestamp;
-  createdAt: Timestamp;
+  updatedAt: string;
+  createdAt: string;
 }
 
 class OrganizerDto implements EventOrganizer {
@@ -43,8 +41,8 @@ class OrganizerDto implements EventOrganizer {
   description: string;
   logoUrl: string;
 
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: string;
+  updatedAt: string;
 }
 
 class EventRoleDto implements EventRole {
@@ -52,18 +50,25 @@ class EventRoleDto implements EventRole {
   userId: string;
   eventId: string;
   role: EventRoleType;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: string;
+  updatedAt: string;
+}
+
+class EventCategoryDto {
+  id: string;
+  name: string;
 }
 
 export class EventDto implements Event {
   id: string;
   name: string;
   description: string;
-  startDate: Timestamp;
-  endDate: Timestamp;
+  startDate: string;
+  endDate: string;
   thumbnailUrl: string;
-  categories: Category[];
+
+  @Type(() => EventCategoryDto)
+  categories: EventCategoryDto[];
 
   @Type(() => LocationDto)
   location: LocationDto;
@@ -77,6 +82,6 @@ export class EventDto implements Event {
   @Type(() => EventRoleDto)
   roles: EventRoleDto[];
 
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: string;
+  updatedAt: string;
 }

@@ -2,11 +2,9 @@ import { INestMicroservice, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { Transport } from '@nestjs/microservices';
 import { LoggerService } from '@shared/services/logger.service';
-import { join } from 'path';
 import { AppModule } from './app.module';
-import { EVENT_PACKAGE_NAME } from './protogen/event.pb';
-import { GlobalGrpcExceptionFilter } from './common/filters/global-grpc-exception.filter';
 import { RpcValidationException } from './common/exceptions/rpc-validation.exception';
+import { EVENT_PACKAGE_NAME } from './protogen/event.pb';
 
 async function bootstrap() {
   const HOST = process.env.HOST || '0.0.0.0';
@@ -32,7 +30,6 @@ async function bootstrap() {
       },
     }),
   );
-  app.useGlobalFilters(new GlobalGrpcExceptionFilter(logger));
   await app.listen();
 }
 

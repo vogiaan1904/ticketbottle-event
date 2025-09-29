@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package event;
 import "google/protobuf/empty.proto";
-import "google/protobuf/timestamp.proto";
 
 service EventService {
     rpc Create(CreateEventRequest) returns (CreateEventResponse);
@@ -11,6 +10,9 @@ service EventService {
     rpc FindMany(FindManyEventRequest) returns (FindManyEventResponse);
     rpc List(ListEventRequest) returns (ListEventResponse);
     rpc Delete(DeleteEventRequest) returns (google.protobuf.Empty);
+
+    // Event config
+    rpc CreateConfig(CreateEventConfigRequest) returns (CreateEventConfigResponse);
     
     // Additional event-specific operations
     rpc PublishEvent(PublishEventRequest) returns (PublishEventResponse);
@@ -27,13 +29,6 @@ enum EventStatus {
     EVENT_STATUS_CANCELLED = 3;
 }
 
-enum Category {
-    CATEGORY_UNSPECIFIED = 0;
-    CATEGORY_MUSIC = 1;
-    CATEGORY_SPORT = 2;
-    CATEGORY_THEATERS_AND_ART = 3;
-    CATEGORY_OTHER = 4;
-}
 
 enum EventRoleType {
     EVENT_ROLE_TYPE_UNSPECIFIED = 0;
@@ -46,22 +41,27 @@ message Event {
     string id = 1;
     string name = 2;
     string description = 3;
-    google.protobuf.Timestamp start_date = 4;
-    google.protobuf.Timestamp end_date = 5;
+    string start_date = 4;
+    string end_date = 5;
     string thumbnail_url = 6;
     EventLocation location = 7;
     EventConfig config = 8;
     EventOrganizer organizer = 9;
     repeated EventRole roles = 10;
-    repeated Category categories = 11;
-    google.protobuf.Timestamp created_at = 12;
-    google.protobuf.Timestamp updated_at = 13;
+    repeated EventCategory categories = 11;
+    string created_at = 12;
+    string updated_at = 13;
+}
+
+message EventCategory {
+    string id = 1;
+    string name = 2;
 }
 
 message EventConfig {
     string id = 1;
-    google.protobuf.Timestamp ticket_sale_start_date = 2;
-    google.protobuf.Timestamp ticket_sale_end_date = 3;
+    string ticket_sale_start_date = 2;
+    string ticket_sale_end_date = 3;
     bool is_free = 4;
     int32 max_attendees = 5;
     bool is_public = 6;
@@ -69,16 +69,12 @@ message EventConfig {
     bool allow_wait_room = 8;
     bool is_new_trending = 9;
     EventStatus status = 10;
-    google.protobuf.Timestamp created_at = 12;
-    google.protobuf.Timestamp updated_at = 13;
 }
 
 message EventLocation {
     string id = 1;
     string venue = 2;
     string address = 3;
-    google.protobuf.Timestamp created_at = 4;
-    google.protobuf.Timestamp updated_at = 5;
 }
 
 message EventOrganizer {
@@ -86,8 +82,6 @@ message EventOrganizer {
     string name = 2;
     string description = 3;
     string logo_url = 4;
-    google.protobuf.Timestamp created_at = 5;
-    google.protobuf.Timestamp updated_at = 6;
 }
 
 message EventRole {
@@ -95,15 +89,13 @@ message EventRole {
     string user_id = 2;
     string event_id = 3;
     EventRoleType role = 4;
-    google.protobuf.Timestamp created_at = 5;
-    google.protobuf.Timestamp updated_at = 6;
 }
 
 message CreateEventRequest {
     string name = 1;
     string description = 2;
-    google.protobuf.Timestamp start_date = 3;
-    google.protobuf.Timestamp end_date = 4;
+    string start_date = 3;
+    string end_date = 4;
     string thumbnail_url = 5;
     string venue = 6;
     string street = 7;
@@ -111,7 +103,7 @@ message CreateEventRequest {
     string country = 9;
     optional string ward = 10;
     optional string district = 11;
-    repeated Category categories = 12;
+    repeated string category_ids = 12;
     string organizer_name = 13;
     string organizer_description = 14;
     string organizer_logo_url = 15;
@@ -126,8 +118,8 @@ message UpdateEventRequest {
     string id = 1;
     optional string name = 2;
     optional string description = 3;
-    optional google.protobuf.Timestamp start_date = 4;
-    optional google.protobuf.Timestamp end_date = 5;
+    optional string start_date = 4;
+    optional string end_date = 5;
     optional string thumbnail_url = 6;
     optional string venue_name = 7;
     optional string street = 8;
@@ -135,10 +127,11 @@ message UpdateEventRequest {
     optional string country = 10;
     optional string ward = 11;
     optional string district = 12;
-    repeated Category categories = 13;
+    repeated string category_ids = 13;
     optional string organizer_name = 14;
     optional string organizer_description = 15;
     optional string organizer_logo_url = 16;
+    string user_id = 17;
 }
 
 message UpdateEventResponse {
@@ -156,12 +149,12 @@ message FindOneEventResponse {
 
 message EventFilter {
     optional string search_query = 1;
-    repeated Category categories = 2;
+    repeated string category_ids = 2;
     optional EventStatus status = 3;
     optional string organizer_id = 4;
     optional string user_id = 5;
-    optional google.protobuf.Timestamp start_date_from = 6;
-    optional google.protobuf.Timestamp start_date_to = 7;
+    optional string start_date_from = 6;
+    optional string start_date_to = 7;
     optional string city = 8;
     optional string country = 9;
     optional bool is_public = 10;
@@ -199,6 +192,26 @@ message ListEventResponse {
 message DeleteEventRequest {
     string id = 1;
 }
+
+// Event Config messages
+message CreateEventConfigRequest {
+    string user_id = 1;
+    string event_id = 2;
+    string ticket_sale_start_date = 3;
+    string ticket_sale_end_date = 4;
+    bool is_free = 5;
+    int32 max_attendees = 6;
+    bool is_public = 7;
+    bool requires_approval = 8;
+    bool allow_wait_room = 9;
+    bool is_new_trending = 10;
+}
+
+message CreateEventConfigResponse {
+    EventConfig event_config = 1;
+}
+
+
 
 // Event-specific operation messages
 message PublishEventRequest {
