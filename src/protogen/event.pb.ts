@@ -16,6 +16,8 @@ export enum EventStatus {
   EVENT_STATUS_DRAFT = 1,
   EVENT_STATUS_PUBLISHED = 2,
   EVENT_STATUS_CANCELLED = 3,
+  EVENT_STATUS_CONFIGURED = 4,
+  EVENT_STATUS_APPROVED = 5,
   UNRECOGNIZED = -1,
 }
 
@@ -39,6 +41,7 @@ export interface Event {
   organizer: EventOrganizer | undefined;
   roles: EventRole[];
   categories: EventCategory[];
+  status: EventStatus;
   createdAt: string;
   updatedAt: string;
 }
@@ -58,7 +61,6 @@ export interface EventConfig {
   requiresApproval: boolean;
   allowWaitRoom: boolean;
   isNewTrending: boolean;
-  status: EventStatus;
 }
 
 export interface EventLocation {
@@ -200,17 +202,45 @@ export interface CreateEventConfigResponse {
   eventConfig: EventConfig | undefined;
 }
 
-/** Event-specific operation messages */
-export interface PublishEventRequest {
+export interface GetEventConfigRequest {
   eventId: string;
+  userId: string;
 }
 
-export interface PublishEventResponse {
-  event: Event | undefined;
+export interface GetEventConfigResponse {
+  eventConfig: EventConfig | undefined;
+}
+
+export interface UpdateEventConfigRequest {
+  eventId: string;
+  userId: string;
+  ticketSaleStartDate: string;
+  ticketSaleEndDate: string;
+  isFree: boolean;
+  maxAttendees: number;
+  isPublic: boolean;
+  requiresApproval: boolean;
+  allowWaitRoom: boolean;
+  isNewTrending: boolean;
+}
+
+export interface UpdateEventConfigResponse {
+  eventConfig: EventConfig | undefined;
+}
+
+export interface ApproveEventRequest {
+  eventId: string;
+  userId: string;
+}
+
+export interface PublishEventRequest {
+  eventId: string;
+  userId: string;
 }
 
 export interface CancelEventRequest {
   eventId: string;
+  userId: string;
 }
 
 export interface CancelEventResponse {
@@ -259,11 +289,17 @@ export interface EventServiceClient {
 
   createConfig(request: CreateEventConfigRequest): Observable<CreateEventConfigResponse>;
 
+  getConfig(request: GetEventConfigRequest): Observable<GetEventConfigResponse>;
+
+  updateConfig(request: UpdateEventConfigRequest): Observable<UpdateEventConfigResponse>;
+
   /** Additional event-specific operations */
 
-  publishEvent(request: PublishEventRequest): Observable<PublishEventResponse>;
+  approveEvent(request: ApproveEventRequest): Observable<Empty>;
 
-  cancelEvent(request: CancelEventRequest): Observable<CancelEventResponse>;
+  publishEvent(request: PublishEventRequest): Observable<Empty>;
+
+  cancelEvent(request: CancelEventRequest): Observable<Empty>;
 
   getEventRoles(request: GetEventRolesRequest): Observable<GetEventRolesResponse>;
 
@@ -299,15 +335,21 @@ export interface EventServiceController {
     request: CreateEventConfigRequest,
   ): Promise<CreateEventConfigResponse> | Observable<CreateEventConfigResponse> | CreateEventConfigResponse;
 
+  getConfig(
+    request: GetEventConfigRequest,
+  ): Promise<GetEventConfigResponse> | Observable<GetEventConfigResponse> | GetEventConfigResponse;
+
+  updateConfig(
+    request: UpdateEventConfigRequest,
+  ): Promise<UpdateEventConfigResponse> | Observable<UpdateEventConfigResponse> | UpdateEventConfigResponse;
+
   /** Additional event-specific operations */
 
-  publishEvent(
-    request: PublishEventRequest,
-  ): Promise<PublishEventResponse> | Observable<PublishEventResponse> | PublishEventResponse;
+  approveEvent(request: ApproveEventRequest): void;
 
-  cancelEvent(
-    request: CancelEventRequest,
-  ): Promise<CancelEventResponse> | Observable<CancelEventResponse> | CancelEventResponse;
+  publishEvent(request: PublishEventRequest): void;
+
+  cancelEvent(request: CancelEventRequest): void;
 
   getEventRoles(
     request: GetEventRolesRequest,
@@ -330,6 +372,9 @@ export function EventServiceControllerMethods() {
       "list",
       "delete",
       "createConfig",
+      "getConfig",
+      "updateConfig",
+      "approveEvent",
       "publishEvent",
       "cancelEvent",
       "getEventRoles",

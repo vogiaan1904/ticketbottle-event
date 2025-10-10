@@ -1,4 +1,3 @@
-// event-role-type.mapper.ts
 import { EventRoleType as ProtoEventRoleType } from '@/protogen/event.pb';
 import { EventRoleType as PrismaEventRoleType } from '@prisma/client';
 

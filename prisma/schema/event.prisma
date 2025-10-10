@@ -1,5 +1,7 @@
 enum EventStatus {
   DRAFT
+  CONFIGURED
+  APPROVED
   PUBLISHED
   CANCELLED
 }
@@ -19,6 +21,7 @@ model Event {
   startDate    DateTime
   endDate      DateTime
   thumbnailUrl String
+  status       EventStatus @default(DRAFT)
   location     EventLocation?
   config       EventConfig?
   organizer    Organizer?
@@ -41,7 +44,6 @@ model EventConfig {
   requiresApproval    Boolean     @default(false)
   allowWaitRoom       Boolean     @default(true)
   isNewTrending       Boolean     @default(false)
-  status              EventStatus @default(DRAFT)
   event               Event       @relation(fields: [eventId], references: [id])
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @updatedAt

@@ -29,7 +29,6 @@ class ConfigDto implements EventConfig {
   requiresApproval: boolean;
   allowWaitRoom: boolean;
   isNewTrending: boolean;
-  status: EventStatus;
 
   updatedAt: string;
   createdAt: string;
@@ -66,6 +65,7 @@ export class EventDto implements Event {
   startDate: string;
   endDate: string;
   thumbnailUrl: string;
+  status: EventStatus;
 
   @Type(() => EventCategoryDto)
   categories: EventCategoryDto[];

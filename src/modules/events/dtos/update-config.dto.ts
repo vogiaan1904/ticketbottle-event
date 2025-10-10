@@ -1,7 +1,4 @@
-import { EventConfig } from '@prisma/client';
-
-export class EventConfigEntity implements EventConfig {
-  id: string;
+export class UpdateConfigDto {
   eventId: string;
   ticketSaleStartDate: Date;
   ticketSaleEndDate: Date;
@@ -11,7 +8,4 @@ export class EventConfigEntity implements EventConfig {
   requiresApproval: boolean;
   allowWaitRoom: boolean;
   isNewTrending: boolean;
-
-  createdAt: Date;
-  updatedAt: Date;
 }

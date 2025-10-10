@@ -41,6 +41,7 @@ export function mapToEventEntity(prismaEvent: PrismaEventWithRelations): EventEn
   entity.startDate = prismaEvent.startDate;
   entity.endDate = prismaEvent.endDate;
   entity.thumbnailUrl = prismaEvent.thumbnailUrl;
+  entity.status = prismaEvent.status;
   entity.createdAt = prismaEvent.createdAt;
   entity.updatedAt = prismaEvent.updatedAt;
 
@@ -115,7 +116,6 @@ function mapToEventConfigEntity(config: EventConfig): EventConfigEntity {
   entity.requiresApproval = config.requiresApproval;
   entity.allowWaitRoom = config.allowWaitRoom;
   entity.isNewTrending = config.isNewTrending;
-  entity.status = config.status;
   return entity;
 }
 

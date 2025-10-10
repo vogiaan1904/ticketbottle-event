@@ -5,3 +5,7 @@ export * from './event.dto';
 export * from './filter-event.dto';
 export * from './list-event.dto';
 export * from './update-event.dto';
+export * from './publish-event.dto';
+export * from './approve-event.dto';
+export * from './update-config.dto';
+export * from './find-config.dto';

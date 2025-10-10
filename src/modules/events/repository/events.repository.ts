@@ -1,15 +1,15 @@
 import { PrismaService } from '@/infra/database/prisma/prisma.service';
-import { CreateCategoryDto, CreateEventDto, FilterEventDto } from '../dtos';
-import { EventCategoryEntity, EventConfigEntity, EventEntity, EventRoleEntity } from '../entities';
-import { CreateEventRoleDto } from '../dtos/create-role.dto';
-import { mapToEventEntities, mapToEventEntity, PrismaEventWithRelations } from './events.mapper';
-import { Prisma } from '@prisma/client';
-import { createPaginator } from '@/shared/utils/pagination.util';
 import { IPaginationOptions } from '@/shared/interfaces/pagination-input.interface';
 import { GetPaginationResponse } from '@/shared/interfaces/pagination-resp.interface';
+import { createPaginator } from '@/shared/utils/pagination.util';
 import { Injectable } from '@nestjs/common';
-import { UpdateEventDto } from '../dtos/update-event.dto';
+import { Prisma } from '@prisma/client';
+import { CreateCategoryDto, CreateEventDto, FilterEventDto, UpdateConfigDto } from '../dtos';
 import { CreateConfigDto } from '../dtos/create-config.dto';
+import { CreateEventRoleDto } from '../dtos/create-role.dto';
+import { UpdateEventDto } from '../dtos/update-event.dto';
+import { EventCategoryEntity, EventConfigEntity, EventEntity, EventRoleEntity } from '../entities';
+import { mapToEventEntities, mapToEventEntity, PrismaEventWithRelations } from './events.mapper';
 
 @Injectable()
 export class EventsRepository {
@@ -38,7 +38,6 @@ export class EventsRepository {
     const where: Prisma.EventWhereInput = {};
     const conditions: Prisma.EventWhereInput[] = [];
     const configFilters: Prisma.EventConfigWhereInput = {
-      status: dto.status,
       isPublic: dto.isPublic,
       isFree: dto.isFree,
     };
@@ -144,6 +143,12 @@ export class EventsRepository {
       });
     }
 
+    if (dto.status) {
+      conditions.push({
+        status: dto.status,
+      });
+    }
+
     where.AND = conditions;
 
     return where;
@@ -175,37 +180,45 @@ export class EventsRepository {
             logoUrl: dto.organizerLogoUrl,
           },
         },
+        categories: {
+          createMany: {
+            data: dto.categoryIds.map((id) => ({
+              categoryId: id,
+            })),
+          },
+        },
       },
       include: this.baseInclude,
     });
 
-    await this.prisma.eventCategory.createMany({
-      data: dto.categoryIds.map((id) => ({
-        eventId: event.id,
-        categoryId: id,
-      })),
-    });
+    // await this.prisma.eventCategory.createMany({
+    //   data: dto.categoryIds.map((id) => ({
+    //     eventId: event.id,
+    //     categoryId: id,
+    //   })),
+    // });
 
     return mapToEventEntity(event);
   }
 
-  async update(dto: UpdateEventDto): Promise<EventEntity> {
+  async update(id: string, dto: UpdateEventDto): Promise<EventEntity> {
     const event = await this.prisma.event.update({
-      where: { id: dto.id },
+      where: { id },
       data: {
         name: dto.name,
         description: dto.description,
         startDate: dto.startDate,
         endDate: dto.endDate,
         thumbnailUrl: dto.thumbnailUrl,
+        status: dto.status,
         location: {
           update: {
             venue: dto.venue,
             street: dto.street,
             city: dto.city,
             country: dto.country,
-            ward: dto.ward,
-            district: dto.district,
+            ward: dto.ward ?? null,
+            district: dto.district ?? null,
           },
         },
         organizer: {
@@ -226,7 +239,7 @@ export class EventsRepository {
     if (!event) {
       return null;
     }
-    
+
     return mapToEventEntity(event);
   }
 
@@ -269,13 +282,26 @@ export class EventsRepository {
   // ********************* EVENT CONFIGURATIONS ********************* //
 
   async createConfig(dto: CreateConfigDto): Promise<EventConfigEntity> {
-    const { userId, ...configData } = dto;
     return this.prisma.eventConfig.create({
       data: {
-        ...configData,
-        eventId: configData.eventId,
+        ...dto,
       },
     });
+  }
+
+  async updateConfig(id: string, dto: UpdateConfigDto): Promise<EventConfigEntity> {
+    return this.prisma.eventConfig.update({
+      where: { id },
+      data: dto,
+    });
+  }
+
+  async findConfigById(id: string): Promise<EventConfigEntity | null> {
+    return this.prisma.eventConfig.findUnique({ where: { id } });
+  }
+
+  async findConfigByEventId(eventId: string): Promise<EventConfigEntity | null> {
+    return this.prisma.eventConfig.findUnique({ where: { eventId } });
   }
 
   // ********************* CATEGORIES ********************* //

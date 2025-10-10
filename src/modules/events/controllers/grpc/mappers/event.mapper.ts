@@ -1,4 +1,3 @@
-// event-response.mapper.ts
 import {
   EventConfigEntity,
   EventEntity,
@@ -25,8 +24,9 @@ export class EventResponseMapper {
       startDate: entity.startDate.toISOString(),
       endDate: entity.endDate.toISOString(),
       thumbnailUrl: entity.thumbnailUrl,
+      status: EventStatusMapper.toProto(entity.status),
       location: entity.location ? this.toProtoEventLocation(entity.location) : undefined,
-      config: entity.config ? this.toProtoEventConfig(entity.config) : undefined,
+      config: undefined,
       organizer: entity.organizer ? this.toProtoEventOrganizer(entity.organizer) : undefined,
       categories: entity.categories.map((category) => ({
         id: category.id,
@@ -61,7 +61,6 @@ export class EventResponseMapper {
       requiresApproval: entity.requiresApproval,
       allowWaitRoom: entity.allowWaitRoom,
       isNewTrending: entity.isNewTrending,
-      status: EventStatusMapper.toProto(entity.status),
     };
   }
 

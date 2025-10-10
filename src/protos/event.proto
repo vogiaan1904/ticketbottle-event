@@ -13,10 +13,13 @@ service EventService {
 
     // Event config
     rpc CreateConfig(CreateEventConfigRequest) returns (CreateEventConfigResponse);
+    rpc GetConfig(GetEventConfigRequest) returns (GetEventConfigResponse);
+    rpc UpdateConfig(UpdateEventConfigRequest) returns (UpdateEventConfigResponse);
     
     // Additional event-specific operations
-    rpc PublishEvent(PublishEventRequest) returns (PublishEventResponse);
-    rpc CancelEvent(CancelEventRequest) returns (CancelEventResponse);
+    rpc ApproveEvent(ApproveEventRequest) returns (google.protobuf.Empty);
+    rpc PublishEvent(PublishEventRequest) returns (google.protobuf.Empty);
+    rpc CancelEvent(CancelEventRequest) returns (google.protobuf.Empty);
     rpc GetEventRoles(GetEventRolesRequest) returns (GetEventRolesResponse);
     rpc AssignEventRole(AssignEventRoleRequest) returns (AssignEventRoleResponse);
     rpc RemoveEventRole(RemoveEventRoleRequest) returns (google.protobuf.Empty);
@@ -27,6 +30,8 @@ enum EventStatus {
     EVENT_STATUS_DRAFT = 1;
     EVENT_STATUS_PUBLISHED = 2;
     EVENT_STATUS_CANCELLED = 3;
+    EVENT_STATUS_CONFIGURED = 4;
+    EVENT_STATUS_APPROVED = 5;
 }
 
 
@@ -49,8 +54,9 @@ message Event {
     EventOrganizer organizer = 9;
     repeated EventRole roles = 10;
     repeated EventCategory categories = 11;
-    string created_at = 12;
-    string updated_at = 13;
+    EventStatus status = 12;
+    string created_at = 13;
+    string updated_at = 14;
 }
 
 message EventCategory {
@@ -68,7 +74,6 @@ message EventConfig {
     bool requires_approval = 7;
     bool allow_wait_room = 8;
     bool is_new_trending = 9;
-    EventStatus status = 10;
 }
 
 message EventLocation {
@@ -211,19 +216,48 @@ message CreateEventConfigResponse {
     EventConfig event_config = 1;
 }
 
+message GetEventConfigRequest {
+    string event_id = 1;
+    string user_id = 2;
+}
+
+message GetEventConfigResponse {
+    EventConfig event_config = 1;
+}
+
+message UpdateEventConfigRequest {
+    string event_id = 1;
+    string user_id = 2;
+    string ticket_sale_start_date = 3;
+    string ticket_sale_end_date = 4;
+    bool is_free = 5;
+    int32 max_attendees = 6;
+    bool is_public = 7;
+    bool requires_approval = 8;
+    bool allow_wait_room = 9;
+    bool is_new_trending = 10;
+}
+
+message UpdateEventConfigResponse {
+    EventConfig event_config = 1;
+}
 
 
 // Event-specific operation messages
-message PublishEventRequest {
+
+message ApproveEventRequest {
     string event_id = 1;
+    string user_id = 2;
 }
 
-message PublishEventResponse {
-    Event event = 1;
+message PublishEventRequest {
+    string event_id = 1;
+    string user_id = 2;
 }
 
 message CancelEventRequest {
     string event_id = 1;
+    string user_id = 2;
 }
 
 message CancelEventResponse {

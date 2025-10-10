@@ -1,5 +1,4 @@
 export class CreateConfigDto {
-  userId: string;
   eventId: string;
   ticketSaleStartDate: Date;
   ticketSaleEndDate: Date;

@@ -1,4 +1,3 @@
-// event-status.mapper.ts
 import { EventStatus as ProtoEventStatus } from '@/protogen/event.pb';
 import { EventStatus as PrismaEventStatus } from '@prisma/client';
 
@@ -7,12 +6,16 @@ export class EventStatusMapper {
     [ProtoEventStatus.EVENT_STATUS_DRAFT, PrismaEventStatus.DRAFT],
     [ProtoEventStatus.EVENT_STATUS_PUBLISHED, PrismaEventStatus.PUBLISHED],
     [ProtoEventStatus.EVENT_STATUS_CANCELLED, PrismaEventStatus.CANCELLED],
+    [ProtoEventStatus.EVENT_STATUS_CONFIGURED, PrismaEventStatus.CONFIGURED],
+    [ProtoEventStatus.EVENT_STATUS_APPROVED, PrismaEventStatus.APPROVED],
   ]);
 
   private static prismaToProtoMap = new Map<PrismaEventStatus, ProtoEventStatus>([
     [PrismaEventStatus.DRAFT, ProtoEventStatus.EVENT_STATUS_DRAFT],
     [PrismaEventStatus.PUBLISHED, ProtoEventStatus.EVENT_STATUS_PUBLISHED],
     [PrismaEventStatus.CANCELLED, ProtoEventStatus.EVENT_STATUS_CANCELLED],
+    [PrismaEventStatus.CONFIGURED, ProtoEventStatus.EVENT_STATUS_CONFIGURED],
+    [PrismaEventStatus.APPROVED, ProtoEventStatus.EVENT_STATUS_APPROVED],
   ]);
 
   static toProto(prismaStatus: PrismaEventStatus): ProtoEventStatus {

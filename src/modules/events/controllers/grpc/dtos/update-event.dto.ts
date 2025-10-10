@@ -6,8 +6,6 @@ import { IsISODateString } from '@/common/decorators/is-date-string.decorator';
 export class UpdateEventDto implements UpdateEventRequest {
   toServiceDto(): ServiceUpdateEventDto {
     return {
-      id: this.id,
-      userId: this.userId,
       name: this.name,
       description: this.description,
       startDate: this.startDate ? new Date(this.startDate) : undefined,

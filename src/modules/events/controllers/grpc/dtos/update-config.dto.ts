@@ -1,10 +1,10 @@
 import { IsISODateString } from '@/common/decorators/is-date-string.decorator';
-import { CreateEventConfigRequest } from '@/protogen/event.pb';
+import { UpdateEventConfigRequest } from '@/protogen/event.pb';
 import { IsBoolean, IsNotEmpty, IsNumber, IsString } from 'class-validator';
-import { CreateConfigDto as ServiceCreateConfigDto } from '../../../dtos';
+import { UpdateConfigDto as ServiceUpdateConfigDto } from '../../../dtos';
 
-export class CreateConfigDto implements CreateEventConfigRequest {
-  toServiceDto(): ServiceCreateConfigDto {
+export class UpdateConfigDto implements UpdateEventConfigRequest {
+  toServiceDto(): ServiceUpdateConfigDto {
     return {
       eventId: this.eventId,
       ticketSaleStartDate: new Date(this.ticketSaleStartDate),

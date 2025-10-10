@@ -1,4 +1,4 @@
-import { Event } from '@prisma/client';
+import { Event, EventStatus } from '@prisma/client';
 import { EventCategoryEntity } from './event-category.entity';
 import { EventConfigEntity } from './event-config.entity';
 import { EventLocationEntity } from './event-location.entity';
@@ -13,6 +13,7 @@ export class EventEntity implements Event {
   endDate: Date;
   thumbnailUrl: string;
   categories: EventCategoryEntity[];
+  status: EventStatus;
 
   location?: EventLocationEntity;
   config?: EventConfigEntity;
