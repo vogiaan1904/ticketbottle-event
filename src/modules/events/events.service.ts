@@ -111,7 +111,7 @@ export class EventsService {
     return config;
   }
 
-  async findConfigByEventId(eventId: string, userId: string): Promise<EventConfigEntity> {
+  async findConfigByEventId(eventId: string, userId?: string): Promise<EventConfigEntity> {
     const event = await this.repository.findById(eventId);
     if (!event) {
       throw new RpcBusinessException(ErrorCodeEnum.EventNotFound);
@@ -128,7 +128,12 @@ export class EventsService {
       }
     }
 
-    return this.repository.findConfigByEventId(eventId);
+    const config = await this.repository.findConfigByEventId(eventId);
+    if (!config) {
+      throw new RpcBusinessException(ErrorCodeEnum.EventConfigNotFound);
+    }
+
+    return config;
   }
 
   // ********************* EVENT-SPECIFIC OPERATIONS ********************* //
