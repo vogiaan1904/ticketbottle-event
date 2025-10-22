@@ -73,7 +73,7 @@ export class CreateEventDto implements CreateEventRequest {
   @IsString()
   district?: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsArray()
   @IsString({ each: true })
   categoryIds: string[];

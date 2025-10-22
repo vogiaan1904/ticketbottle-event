@@ -79,6 +79,7 @@ export class GrpcEventsController {
         pageSize: out.meta.perPage,
         count: out.meta.total,
         lastPage: out.meta.lastPage,
+        total: out.meta.total,
         hasNext: out.meta.next === 1,
         hasPrevious: out.meta.prev === 1,
       },

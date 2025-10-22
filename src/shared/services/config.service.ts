@@ -43,18 +43,6 @@ export class AppConfigService {
     };
   }
 
-  get redisConfig() {
-    return {
-      url: this.get('REDIS_URL') || 'redis://localhost:6379',
-      host: this.get('REDIS_HOST'),
-      port: this.getNumber('REDIS_PORT'),
-      password: this.get('REDIS_PASSWORD'),
-      retryDelayOnFailover: this.getNumber('REDIS_RETRY_DELAY_ON_FAILOVER'),
-      enableReadyCheck: this.get('REDIS_ENABLE_READY_CHECK'),
-      maxRetriesPerRequest: this.getNumber('REDIS_MAX_RETRIES_PER_REQUEST'),
-    };
-  }
-
   get microservicesConfig() {
     return {
       internalKey: this.get('MICROSERVICE_INTERNAL_KEY'),
@@ -129,7 +117,6 @@ export class AppConfigService {
       globalPrefix: this.get('APP_GLOBAL_PREFIX'),
       corsOrigins: this.get('APP_CORS_ORIGINS'),
       logLevel: this.get('APP_LOG_LEVEL'),
-      initAdminPassword: this.get('APP_INIT_ADMIN_PASSWORD'),
       encryptKey: this.get('ENCRYPT_KEY'),
     };
   }

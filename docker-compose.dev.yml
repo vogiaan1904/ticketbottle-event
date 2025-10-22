@@ -1,21 +1,9 @@
 # docker-compose.dev.yml
-version: '3.8'
+version: "3.8"
 
 services:
-  redis:
-    image: redis:7-alpine
-    container_name: ticketbottle-redis
-    ports:
-      - "6381:6379"
-    volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes
-    restart: unless-stopped
-    networks:
-      - app-network
-
   postgres:
-    image: postgres:latest
+    image: postgres:15-alpine
     container_name: ticketbottle-postgres
     environment:
       POSTGRES_DB: ticketbottle
@@ -26,13 +14,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
-    networks:
-      - app-network
 
 volumes:
   redis_data:
   postgres_data:
-
-networks:
-  app-network:
-    driver: bridge

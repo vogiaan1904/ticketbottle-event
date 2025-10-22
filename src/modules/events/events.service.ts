@@ -41,7 +41,12 @@ export class EventsService {
   }
 
   findById(id: string): Promise<EventEntity> {
-    return this.repository.findById(id);
+    const event = this.repository.findById(id);
+    if (!event) {
+      throw new RpcBusinessException(ErrorCodeEnum.EventNotFound);
+    }
+
+    return event;
   }
 
   list(dto: FilterEventDto): Promise<EventEntity[]> {
@@ -112,13 +117,15 @@ export class EventsService {
       throw new RpcBusinessException(ErrorCodeEnum.EventNotFound);
     }
 
-    const isAdminOrEditor = event.roles.some(
-      (role) =>
-        role.userId === userId &&
-        (role.role === EventRoleType.ADMIN || role.role === EventRoleType.EDITOR),
-    );
-    if (!isAdminOrEditor) {
-      throw new RpcBusinessException(ErrorCodeEnum.PermissionDenied);
+    if (userId) {
+      const isAdminOrEditor = event.roles.some(
+        (role) =>
+          role.userId === userId &&
+          (role.role === EventRoleType.ADMIN || role.role === EventRoleType.EDITOR),
+      );
+      if (!isAdminOrEditor) {
+        throw new RpcBusinessException(ErrorCodeEnum.PermissionDenied);
+      }
     }
 
     return this.repository.findConfigByEventId(eventId);
